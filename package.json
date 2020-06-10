@@ -35,6 +35,8 @@
     "webpack-cli": "^3.3.4"
   },
   "dependencies": {
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "react-i18next": "^11.5.0",
+    "react-redux": "^7.2.0"
   }
 }
