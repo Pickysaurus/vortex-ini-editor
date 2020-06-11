@@ -1,0 +1,20 @@
+#ini-tabs {
+    .tab-content {
+        border-width: 0px 1px 1px 1px;
+        border-style: solid;
+        border-color: gray;
+        padding: 8px;
+    }
+}
+
+#ini-editor-loading {
+    text-align: center;
+  
+    .page-wait-spinner-container {
+        padding: 3em;
+    }
+    .page-wait-spinner {
+        width: 5em;
+        height: 5em;
+    }
+}

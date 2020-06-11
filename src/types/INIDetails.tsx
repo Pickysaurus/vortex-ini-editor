@@ -30,7 +30,7 @@ export interface INIEntry {
     // @section: which part of the INI did this appear in e.g. [General]
     section: string;
     // @type: what type of value is it (how should we render it?)
-    type?: 'boolean' | 'string' | 'float' | 'number' | 'choice' | 'free-choice' | 'range';
+    type?: 'boolean' | 'string' | 'float' | 'number' | 'choice' | 'free-choice' | 'range' | 'special';
     // @value: the current value.
     value?: string | boolean | number;
     // @value: the default value.

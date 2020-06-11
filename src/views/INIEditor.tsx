@@ -9,6 +9,8 @@ import { TFunction } from 'i18next';
 
 import INIDetails, { INIEntry } from '../types/INIDetails';
 
+type INITab = 'General' | 'Display' | 'Gameplay' | 'Interface' | 'Visuals' | 'Advanced';
+
 interface IBaseProps {
     shown: boolean;
     onHide: () => void;
@@ -28,18 +30,21 @@ interface IComponentState {
     loading: boolean;
     loadingMessage?: string;
     iniData?: INIDetails;
+    activeTab: INITab;
 }
   
 type IProps = IBaseProps & IConnectedProps;
 
 class INIEditor extends ComponentEx<IProps, IComponentState> {
     private staticButtons: types.IActionDefinition[];
+    private static INITabs: INITab[] = ['General', 'Display', 'Gameplay', 'Interface', 'Visuals', 'Advanced'];
     
     constructor(props: IProps) {
         super(props);
 
         this.initState({
             loading: true,
+            activeTab: 'General',
         });
 
         this.staticButtons = [
@@ -47,12 +52,14 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                 component: ToolbarIcon,
                 props: () => {
                     const { loading } = this.state;
+                    const { t } = this.props;
                     return {
                         id: 'btn-back-to-mods',
                         key: 'btn-back-to-mods',
-                        icon: loading ? 'locked' : 'nav-back',
+                        icon: 'nav-back',
                         text: 'Back to Mods',
                         state: loading,
+                        condition: () => loading ? t('Please wait for the page to finish loading.') : true,
                         onClick: () => {
                             if (loading) return;
                             this.context.api.events.emit('show-main-page', 'Mods');
@@ -82,10 +89,12 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
 
     private start(): void {
         const { gameId } = this.props;
+        this.nextState.loadingMessage = "Loading Message, yay!";
         setTimeout(() => {
             fs.readdirAsync(path.join(__dirname, gameId)).then()
             .catch(err => console.log(err));
             this.nextState.loading = false
+            this.nextState.loadingMessage = null;
         }, 2000);
     }
 
@@ -118,11 +127,15 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
     }
 
     private renderSpinner(): JSX.Element {
+        const { loadingMessage } = this.state;
         return (
         <MainPage.Body id='ini-editor-loading'>
             <Panel>
                 <Panel.Body>
-                    <Spinner />
+                    <div className="page-wait-spinner-container">
+                    <Spinner className='page-wait-spinner' />
+                    </div>
+                    {loadingMessage}
                 </Panel.Body>
             </Panel>
         </MainPage.Body>
@@ -131,6 +144,7 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
 
     private renderPage(): JSX.Element {
         const { game } = this.props;
+        const { activeTab } = this.state;
 
         return (
             <MainPage.Body id='ini-editor-page-content'>
@@ -138,10 +152,31 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                     <Panel.Body>
                     <h1>Game Settings for {game.name}</h1>
                     Some fluff goes here about the purpose of the extension and how to use it. 
+                    <Tabs id="ini-tabs" activeKey={activeTab} onSelect={(tab: INITab) => this.nextState.activeTab = tab}>
+                        {INIEditor.INITabs.map((tab: INITab) => {
+                            return (
+                            <Tab key={tab.toLowerCase().replace(' ', '-')} eventKey={tab} title={tab}>
+                                {this.renderTabContent(tab)}
+                            </Tab>
+                            );
+                        })}
+                    </Tabs>
                     </Panel.Body>
                 </Panel>
             </MainPage.Body>
         );
+    }
+
+    private renderTabContent(tab: INITab): JSX.Element {
+        switch(tab) {
+            case 'Display' : return <p>{tab}</p>
+            case 'General' : return <p>{tab}</p>
+            case 'Gameplay' : return <p>{tab}</p>
+            case 'Interface' : return <p>{tab}</p>
+            case 'Visuals' : return <p>{tab}</p>
+            case 'Advanced' : return <p>{tab}</p>
+            default : return null
+        }
     }
 
 }

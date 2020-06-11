@@ -14,6 +14,11 @@ async function main(context: types.IExtensionContext) {
     });
 
   context.registerMainPage('', 'Game Settings', INIEditor, { group: 'hidden' });
+
+  context.once(() => {
+    context.api.setStylesheet('ini-editor', path.join(__dirname, 'ini-editor.scss'));
+  });
+
   return true;
 }
 
