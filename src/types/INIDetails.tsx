@@ -55,6 +55,8 @@ export interface INIEntry {
     foundIn: string;
     // @allowCustom: This value works in the Custom.ini
     allowCustom?: boolean;
+    // @hideIfBlank: Should this value not be printed to the resulting INI file if it's blank?
+    hideIfBlank?: boolean;
 }
 
 /* INIEntry Example */

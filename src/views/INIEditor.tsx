@@ -8,6 +8,7 @@ import { connect } from 'react-redux';
 import { TFunction } from 'i18next';
 
 import INIDetails, { INIEntry } from '../types/INIDetails';
+import loadINIData from '../util/loadINIdata';
 
 type INITab = 'General' | 'Display' | 'Gameplay' | 'Interface' | 'Visuals' | 'Advanced';
 
@@ -29,7 +30,7 @@ interface IActionProps {};
 interface IComponentState {
     loading: boolean;
     loadingMessage?: string;
-    iniData?: INIDetails;
+    iniData?: INIDetails[];
     activeTab: INITab;
 }
   
@@ -87,9 +88,20 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
         this.nextState.loading = true;
     }
 
-    private start(): void {
-        const { gameId } = this.props;
-        this.nextState.loadingMessage = "Loading Message, yay!";
+    private start(): Promise<any> {
+        const { gameId, profile } = this.props;
+        const profileId = profile ? profile.id : undefined;
+        const loadMsg = (msg : string) => this.nextState.loadingMessage = msg;
+
+        return loadINIData(loadMsg, gameId, profileId)
+        .then((iniData) => {
+            this.nextState.iniData = iniData;
+            this.nextState.loading = false;
+            this.nextState.loadingMessage = null;
+            console.log(iniData);
+            return Promise.resolve();
+        })
+
         setTimeout(() => {
             fs.readdirAsync(path.join(__dirname, gameId)).then()
             .catch(err => console.log(err));
