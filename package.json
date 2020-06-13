@@ -7,7 +7,7 @@
   "scripts": {
     "webpack": "node ./node_modules/webpack/bin/webpack --config webpack.config.js --display-error-details --progress --profile --color",
     "bundle7z": "7z a -t7z sample-extension.7z .\\dist\\index.js .\\dist\\info.json",
-    "build": "npm run webpack && copyfiles -f src/stylesheets/* dist && extractInfo"
+    "build": "npm run webpack && copyfiles -f src/stylesheets/* dist && copyfiles -u 1 src/data/*/* dist && extractInfo"
   },
   "author": "Pickysaurus",
   "license": "GPL-3.0",

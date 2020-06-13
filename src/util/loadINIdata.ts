@@ -32,6 +32,9 @@ function loadINIData(loadMsg: (message: string) => void, gameId: string, activeP
 
     let results = {};
 
+    return fs.readFileAsync(path.join(__dirname, 'data', gameId, 'settings.json'))
+    .then((data) => JSON.parse(data));
+
     return Promise.all(INIBasePaths.map((ini: string) => {
         // Check the INI actually exists.
         return fs.statAsync(ini)
