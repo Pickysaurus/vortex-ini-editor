@@ -4,7 +4,7 @@ import INIEditor from './views/INIEditor';
 
 async function main(context: types.IExtensionContext) {
 
-  let supportedGameIds = ['skyrimse', 'fallout4', 'skyrim'] //fs.readdirAsync(path.join());
+  let supportedGameIds = ['skyrimse', 'fallout4', 'skyrim']; //fs.readdirAsync(path.join(__dirname, 'data'));
 
   context.registerAction('mod-icons', 100, 'changelog', {}, 'Game Settings', 
     () => context.api.events.emit('show-main-page', 'Game Settings'),

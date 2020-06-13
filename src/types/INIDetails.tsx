@@ -63,6 +63,12 @@ export class INISettings implements INIDetails {
         
     }
 
+    updateSetting(section: string, name: string, value: string | number) {
+        let existing = this.iniValues.find(v => v.name === name);
+        if (!!existing) existing.value.current = value;
+        else console.warn('Failed to set non-existant INI setting', section, name, value);
+    }
+
 }
 
 function parsePaths(input: [string[]], options?: {gamefolder?: string}): string[] {
