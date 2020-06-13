@@ -26,12 +26,20 @@ const gameSupport = {
       ]
     },
     fallout4: {
+      id: "fallout4",
+      name: "Fallout 4",
       iniFiles: [
         path.join('{mygames}', 'Fallout4', 'Fallout4.ini'),
         path.join('{mygames}', 'Fallout4', 'Fallout4Prefs.ini'),
         path.join('{mygames}', 'Fallout4', 'Fallout4Custom.ini'),
       ],
       iniFormat: 'winapi',
+      presetPaths: [
+        path.join("{gamefolder}", "low.ini"),
+        path.join("{gamefolder}", "medium.ini"),
+        path.join("{gamefolder}", "high.ini"),
+        path.join("{gamefolder}", "ultra.ini")
+      ]
     }
   };
 
@@ -122,7 +130,7 @@ function buildINIData(iniFiles: Object, gameInfo, presets): Promise<INIDetails> 
 }
 
 function getTypeFromName(name: string) {
-  switch (name.substr(0,1)) {
+  switch (name.substr(0,1).toLowerCase()) {
     case 'b': return 'boolean';
     case 'i': return 'number';
     case 'u': return 'number';
