@@ -25,6 +25,22 @@ const gameSupport = {
         path.join("{gamefolder}", "ultra.ini")
       ]
     },
+    skyrim: {
+      id: "skyrim",
+      name: "Skyrim",
+      iniFiles: [
+        path.join('{mygames}', 'Skyrim Special Edition', 'Skyrim.ini'),
+        path.join('{mygames}', 'Skyrim Special Edition', 'SkyrimPrefs.ini'),
+        path.join('{mygames}', 'Skyrim Special Edition', 'SkyrimCustom.ini'),
+      ],
+      iniFormat: 'winapi',
+      presetPaths: [
+        path.join("{gamefolder}", "low.ini"),
+        path.join("{gamefolder}", "medium.ini"),
+        path.join("{gamefolder}", "high.ini"),
+        path.join("{gamefolder}", "ultra.ini")
+      ]
+    },
     fallout4: {
       id: "fallout4",
       name: "Fallout 4",
@@ -52,7 +68,7 @@ function loadINIData(loadMsg: (message: string) => void, gameId: string, activeP
     let presets = {};
 
     // return fs.readFileAsync(path.join(__dirname, 'data', gameId, 'settings.json'))
-    // .then((data) => JSON.parse(data));
+    // .then((data) => JSON.parse(data)); 
 
     return Promise.all(PresetPaths.map((p: string) => {
       return fs.statAsync(p).catch(() => undefined)
