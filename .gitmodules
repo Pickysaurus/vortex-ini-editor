@@ -1,0 +1,3 @@
+[submodule "src/data/skyrimse"]
+	path = src/data/skyrimse
+	url = https://github.com/Pickysaurus/skyrimse-ini-settings
