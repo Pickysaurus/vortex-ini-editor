@@ -101,13 +101,6 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
             console.log(iniData);
             return Promise.resolve();
         })
-
-        setTimeout(() => {
-            fs.readdirAsync(path.join(__dirname, gameId)).then()
-            .catch(err => console.log(err));
-            this.nextState.loading = false
-            this.nextState.loadingMessage = null;
-        }, 2000);
     }
 
     render() : JSX.Element {
