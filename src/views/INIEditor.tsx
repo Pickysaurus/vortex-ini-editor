@@ -22,6 +22,7 @@ interface IConnectedProps {
     gameId: string;
     game: types.IGame;
     profile: types.IProfile;
+    discovery: any;
     t?: TFunction;
 }
 
@@ -89,11 +90,11 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
     }
 
     private start(): Promise<any> {
-        const { gameId, profile } = this.props;
+        const { gameId, profile, discovery } = this.props;
         const profileId = profile ? profile.id : undefined;
         const loadMsg = (msg : string) => this.nextState.loadingMessage = msg;
 
-        return loadINIData(loadMsg, gameId, profileId)
+        return loadINIData(loadMsg, gameId, profileId, discovery)
         .then((iniData) => {
             this.nextState.iniData = iniData;
             this.nextState.loading = false;
@@ -190,10 +191,12 @@ function mapStateToProps(state: types.IState): IConnectedProps {
     const gameId = selectors.activeGameId(state);
     const game = selectors.gameById(state, gameId);
     const profile = selectors.activeProfile(state);
+    const discovery = util.getSafe(state, ['settings', 'gameMode', 'discovered', gameId], {})
     return {
         gameId,
         game,
         profile,
+        discovery,
     };
 }
   
