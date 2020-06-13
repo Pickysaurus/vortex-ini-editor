@@ -1,3 +1,6 @@
 [submodule "src/data/skyrimse"]
 	path = src/data/skyrimse
 	url = https://github.com/Pickysaurus/skyrimse-ini-settings
+[submodule "src/data/fallout4"]
+	path = src/data/fallout4
+	url = https://github.com/Pickysaurus/fallout4-ini-settings
