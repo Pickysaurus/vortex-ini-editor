@@ -1,26 +1,8 @@
 export default interface INIDetails {
-    name: string;
-    sections: [{id: string, value: INIEntry[]}];
+    gameId: string;
+    gameName: string;
+    iniValues: INIEntry[];
 }
-
-/* INIDetails Example
-{
-    name: 'Skyirm.ini'
-    sections: [
-        {'General': [
-            {
-                name: 'SIntroSequence',
-                type: 'string',
-                value: '',
-                defaultValue: 'BGS_Logo.bik',
-                description: 'The video to play on starting up the game. Must be the file name from the Data/Videos folder. Leave blank to skip the intro.',
-                foundIn: ['SkyrimCustom.ini', 'Skyrim.ini'],
-                category: 'general',
-            }
-        ]}
-    ]
-}
-*/
 
 export interface INIEntry {
     // @name: name of the INI entry (setting)
@@ -29,6 +11,14 @@ export interface INIEntry {
     title?: string; 
     // @section: which part of the INI did this appear in e.g. [General]
     section: string;
+    // @description: human readable description of what this does. 
+    description?: string;
+    // @images: to use in the description/help modal. Left/Right compare and/or a single main image.
+    images?: {
+        compareLeft?: string;
+        compaireRight?: string;
+        main?: string;
+    }
     // @type: what type of value is it (how should we render it?)
     type?: 'boolean' | 'string' | 'float' | 'number' | 'choice' | 'free-choice' | 'range' | 'special';
     value?: {
@@ -55,17 +45,12 @@ export interface INIEntry {
     }
     // @choices: If "choice" or "free-choice" are chosen as the type, list the choices here.
     choices?: string[] | number[];
-    // @description: human readable description of what this does. 
-    description?: string;
-    // @category: Is this a general setting or an advanced one? If this is unfilled it will be classed as "undocumented"
-    // Perhaps we could expand this to tell which tab in the GUI this setting is in (e.g., Visuals)
-    category?: 'general' | 'advanced',
-    // @images: to use in the description/help modal. Left/Right compare and/or a single main image.
-    images?: {
-        compareLeft?: string;
-        compaireRight?: string;
-        main?: string;
-    }
+    // @rangeStepSize: If the type is 'range' this indicates which increments the slider moves in.
+    rangeStepSize?: number;
+    // @displayTab: Which tab should we load this into for Vortex's UI? If this is unfilled it will be classed as an "undocumented" value under "Advanced"
+    displayTab?: string;
+    // @category: For general the setting will be visible, for advanced it will appear under "advanced" in the displayTab, if not set, it will appear under "undocumented" in the displayTab. 
+    category?: 'general' | 'advanced';
     // @allowPrefs: This setting works in the prefs INI
     allowPrefs?: boolean;
     // @hideIfBlank: Should this value not be printed to the resulting INI file if it's blank?
