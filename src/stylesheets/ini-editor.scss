@@ -19,3 +19,22 @@
         height: 5em;
     }
 }
+
+.ini-setting-container {
+    background-color: #2A2C2B;
+    border: 1px solid #DEE2E6;
+    padding: 4px 8px;
+    margin: 4px;
+
+    input {
+        color: #000;
+    }
+
+    input[type=checkbox] {
+        margin-right: 4px;
+    }
+
+    p {
+        margin-top: 0;
+    }
+}

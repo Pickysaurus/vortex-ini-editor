@@ -63,10 +63,18 @@ export class INISettings implements INIDetails {
         
     }
 
-    updateSetting(section: string, name: string, value: string | number) {
+    updateSetting(section: string, name: string, value) {
         let existing = this.iniValues.find(v => v.name.toLowerCase() === name.toLowerCase());
-        if (!!existing) existing.value.current = value;
+        if (!!existing) { 
+            if (existing.type === 'boolean' || existing.type === 'number') existing.value.current = parseInt(value);
+            else if (existing.type === 'float') existing.value.current = parseFloat(value);
+            else existing.value.current = value;
+        }
         else console.warn('Failed to set non-existant INI setting', section, name, value);
+    }
+
+    getSetting(name: string) {
+        return this.iniValues.find(v => v.name.toLowerCase() === name.toLowerCase());
     }
 
 }
@@ -100,28 +108,33 @@ export interface INIEntry {
     type?: 'boolean' | 'string' | 'float' | 'number' | 'choice' | 'free-choice' | 'range' | 'special';
     value?: {
         // @current: the current value.
-        current?: string | boolean | number;
+        current?: string | number;
         // @default: the default value used when the value is not assigned by the INI file
-        default?: string | boolean | number;
+        default?: string |  number;
         // @fixedDefault: the fixed default value (some default values are bugged and should never be used)
-        fixedDefault?: string | boolean | number;
+        fixedDefault?: string | number;
         // @max: the max value
         max?: number;
         // @min: the min value
         min?: number;
         // @low: the low preset value
-        low?: string | boolean | number;
+        low?: string | number;
         // @medium: the medium preset value
-        medium?: string | boolean | number;
+        medium?: string | number;
         // @high: the high preset value
-        high?: string | boolean | number;
+        high?: string | number;
         // @ultra: the ultra preset value
-        ultra?: string | boolean | number;
+        ultra?: string | number;
         // @recommended: a recommended value
-        recommended?: string | boolean | number;
-    }
+        recommended?: string | number;
+    };
     // @choices: If "choice" or "free-choice" are chosen as the type, list the choices here.
-    choices?: string[] | number[];
+    choices?: [
+        {
+            label: string;
+            value: string | number
+        }
+    ]//string[] | number[];
     // @rangeStepSize: If the type is 'range' this indicates which increments the slider moves in.
     rangeStepSize?: number;
     // @displayTab: Which tab should we load this into for Vortex's UI? If this is unfilled it will be classed as an "undocumented" value under "Advanced"
@@ -130,6 +143,13 @@ export interface INIEntry {
     category?: 'general' | 'advanced';
     // @allowPrefs: This setting works in the prefs INI
     allowPrefs?: boolean;
+    // @dependantOn: This setting is dependent upon another setting. If the dependent setting is not set, this value does nothing.
+    dependentOn?: {
+        // @name: the name of the setting this setting is dependent on
+        name: string;
+        // @value: the value required of the dependent setting for the main setting to work
+        value: string | number;
+    };
     // @hideIfBlank: Should this value not be printed to the resulting INI file if it's blank?
     hideIfBlank?: boolean;
 }

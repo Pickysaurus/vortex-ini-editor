@@ -1,14 +1,14 @@
 import { ComponentEx, fs, selectors, types, util, Spinner, MainPage, IconBar, ToolbarIcon } from 'vortex-api';
 import { Panel, Tab, Tabs } from 'react-bootstrap';
 import * as React from 'react';
-import * as Redux from 'redux';
-import * as path from 'path';
+import * as Redux from 'redux';;
 import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { TFunction } from 'i18next';
 
-import INIDetails, { INIEntry } from '../types/INIDetails';
+import { INISettings } from '../types/INIDetails';
 import loadINIData from '../util/loadINIdata';
+import INITabContent from '../views/INITabContent';
 
 type INITab = 'General' | 'Display' | 'Gameplay' | 'Interface' | 'Visuals' | 'Advanced';
 
@@ -31,7 +31,8 @@ interface IActionProps {};
 interface IComponentState {
     loading: boolean;
     loadingMessage?: string;
-    iniData?: INIDetails[];
+    loadedData?: INISettings;
+    workingData?: INISettings;
     activeTab: INITab;
 }
   
@@ -68,6 +69,22 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                         }
                     }
                 }
+            },
+            {
+                component: ToolbarIcon,
+                props: () => {
+                    const { loading } = this.state;
+                    const { t } = this.props;
+                    return {
+                        id: 'btn-save-inis',
+                        key: 'btn-save-inis',
+                        icon: 'savegame',
+                        text: 'Save Changes',
+                        state: loading,
+                        condition: () => loading ? t('Please wait for the page to finish loading.') : true,
+                        onClick: () => undefined
+                    }
+                }
             }
         ];
     }
@@ -90,13 +107,14 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
     }
 
     private start(): Promise<any> {
-        const { gameId, profile, discovery } = this.props;
-        const profileId = profile ? profile.id : undefined;
+        const { gameId, profile } = this.props;
+        // const profileId = profile ? profile.id : undefined;
         const loadMsg = (msg : string) => this.nextState.loadingMessage = msg;
 
-        return loadINIData(loadMsg, gameId, profileId, discovery)
+        return loadINIData(loadMsg, gameId)
         .then((iniData) => {
-            this.nextState.iniData = iniData;
+            this.nextState.loadedData = iniData;
+            this.nextState.workingData = new INISettings(JSON.parse(JSON.stringify(iniData)));
             this.nextState.loading = false;
             this.nextState.loadingMessage = null;
             console.log(iniData);
@@ -173,14 +191,11 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
         );
     }
 
-    private renderTabContent(tab: INITab): JSX.Element {
-        switch(tab) {
-            case 'Display' : return <p>{tab}</p>
-            case 'General' : return <p>{tab}</p>
-            case 'Gameplay' : return <p>{tab}</p>
-            case 'Interface' : return <p>{tab}</p>
-            case 'Visuals' : return <p>{tab}</p>
-            case 'Advanced' : return <p>{tab}</p>
+    private renderTabContent(tabName: INITab): JSX.Element {
+        const { activeTab, workingData, loadedData } = this.state;
+
+        switch(INIEditor.INITabs.includes(tabName) && activeTab === tabName) {
+            case true: return <INITabContent tabName={tabName} working={workingData} saved={loadedData} />
             default : return null
         }
     }

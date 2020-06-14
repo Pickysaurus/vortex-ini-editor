@@ -8,10 +8,7 @@ const parser = new INIParser(new WinapiFormat);
 
 
 
-function loadINIData(loadMsg: (message: string) => void, gameId: string, activeProfile?: string, discovery?: any) : Promise<any> {
-
-    let results = {};
-    let presets = {};
+function loadINIData(loadMsg: (message: string) => void, gameId: string) : Promise<INISettings> {
 
     loadMsg('Getting game data...');
 
@@ -29,7 +26,10 @@ function loadINIData(loadMsg: (message: string) => void, gameId: string, activeP
             return Promise.all(Object.keys(data).map((section: string) => {
               const settings = Object.keys(data[section]);
               return Promise.all(settings.map((name: string) => {
-                const currentValue = data[section][name];
+                let currentValue = data[section][name];
+                const type = getTypeFromName(name);
+                if (type === 'boolean' || type === 'number') currentValue = parseInt(currentValue);
+                else if (type === 'float') currentValue = parseFloat(currentValue);
                 iniSettings.updateSetting(section, name, currentValue);
               }))
             }));
@@ -41,12 +41,19 @@ function loadINIData(loadMsg: (message: string) => void, gameId: string, activeP
     .catch((err) => loadMsg(`Error!\n ${err.code} - ${err.message}`)); 
 }
 
-function groupBysection(iniFiles: Object[]): Promise<Object> {
-    const result = {};
-    return Promise.each(iniFiles, (file) => {
-        const categories = Object.keys(file);
-        return categories.map((section) => result[section] = file[section]);
-    }).then(() => result);
+function getTypeFromName(name: string) {
+  switch (name.substr(0,1).toLowerCase()) {
+    case 'b': return 'boolean';
+    case 'i': return 'number';
+    case 'u': return 'number';
+    case 'f': return 'float';
+    case 's': return 'string';
+    case 'r': return 'string';
+    default: {
+      console.log('Unknown prefix for value', name);
+      return undefined;
+    };
+  }
 }
 
 export default loadINIData;
