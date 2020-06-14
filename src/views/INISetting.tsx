@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Row, Col } from 'react-bootstrap';
 import { INIEntry, INISettings } from '../types/INIDetails';
 import { ComponentEx, tooltip } from "vortex-api";
 import Select from 'react-select';
@@ -35,8 +36,8 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
 
         return (
             <span key={setting.name} title={setting.description || 'No description.'}>
-                <p>{type === 'boolean' ? this.renderInput(): ''}{displayName}{setting.value.current != savedSetting.value.current ? <tooltip.Icon name="feedback-warning" tooltip='Data not saved!' /> : ''}</p>
-                {type !== 'boolean' ? this.renderInput() : ''}
+                <p><b>{displayName}</b>{setting.value.current != savedSetting.value.current ? <tooltip.Icon name="feedback-warning" tooltip='Data not saved!' /> : ''}</p>
+                {this.renderInput()}
             </span>
         )
     }
@@ -45,14 +46,18 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         const { setting, type } = this.state;
         const value : string | number = (type === 'boolean') ? setting.value.current ? 1 : 0 : `${setting.value.current}`;
         switch(type) {
-            case 'string': return <input value={value} onChange={this.set.bind(this)}/>
+            case 'string': return <input className='form-control' value={value} onChange={this.set.bind(this)}/>
             case 'boolean': return <input type='checkbox' checked={value == 1} onChange={this.set.bind(this)}/>
             case 'number': return <input value={value} readOnly/>
             case 'float': return <input value={value} readOnly/>
-            case 'choice': return <Select options={setting.choices} value={setting.value.current} onChange={this.set.bind(this)}  /> 
-            //<select onChange={this.set.bind(this)}>{setting.choices.map(c => <option key={`${setting.name}-${c.value}`}>{c.text || c.value}</option>)}</select>
+            case 'choice': return <Select options={setting.choices} value={setting.choices.find(c => c.value === setting.value.current)} onChange={this.set.bind(this)} isClearable={false}  /> 
             case 'free-choice': return <select><option>{value}</option></select>
-            default: return <input value={value} readOnly/>
+            case 'range': return (
+            <Row>
+                <Col sm='auto'><input type='range' value={setting.value.current || 0} min={setting.value.min} max={setting.value.max} step={setting.rangeStepSize} onChange={this.set.bind(this)} /></Col>
+                <Col sm={6}><input className='form-control' value={setting.value.current}/></Col>
+            </Row>);
+            default: return <input className='form-control' value={value} readOnly/>
         }
     }
 
@@ -64,8 +69,14 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         const current: any = setting.value.current;
 
         if (type === 'boolean') newValue = event.target.checked ? 1 : 0;
-        else if (type === 'choice') newValue = !isNaN(parseFloat(current)) ? parseFloat(event.value) : Number.isInteger(current) ? parseInt(event.value) : event.value;
+        else if (type === 'choice') {
+            if (!event || !!event.value) event = setting.choices.find(c => c.value === setting.value.default);
+            newValue = !isNaN(parseFloat(current)) ? parseFloat(event.value) : Number.isInteger(current) ? parseInt(event.value) : event.value
+        }
+        else if (type === 'range') newValue = !isNaN(parseFloat(current)) ? parseFloat(event.target.value) : Number.isInteger(current) ? parseInt(event.target.value) : event.target.value;
         else newValue = event.target.value;
+
+        if (current === newValue) return;
 
         //do validation and apply new value.
 

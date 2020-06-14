@@ -3,6 +3,7 @@ import { Row, Col, Panel, PanelGroup } from 'react-bootstrap';
 import { ComponentEx, Icon } from 'vortex-api';
 import { INISettings } from '../types/INIDetails';
 import INISetting from './INISetting';
+import INIResolution from './INIResolution';
 
 // List of settings that are manually rendered in the visible area at the top of each tab. Others will be loaded into to the advanced/undocumented sections.
 const visibleSettings = {
@@ -109,39 +110,44 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
 
         const widthSetting = working.getSetting('iSize W');
         const heightSetting = working.getSetting('iSize H');
-        if (widthSetting && heightSetting) settingComponents.push(<p>Resolution: {widthSetting.value.current} x {heightSetting.value.current}</p>);
+        // if (widthSetting && heightSetting) settingComponents.push(<p>Resolution: {widthSetting.value.current} x {heightSetting.value.current}</p>);
 
-        if (working.getSetting('bUseTAA')) settingComponents.push(
-        <INISetting
-            name='bUseTAA'
-            workingINI={working}
-            savedINI={saved}
-        />
-        );
-
+        if (working.getSetting('iSize W') && working.getSetting('iSize H')) settingComponents.push(
+            <INIResolution
+                nameW='iSize W'    
+                nameH='iSize H'
+                workingINI={working}
+                savedINI={saved}
+            />
+        )
 
         if (working.getSetting('bFull Screen')) settingComponents.push(
-        <INISetting
-            name='bFull Screen'
-            workingINI={working}
-            savedINI={saved}
-        />
+            <INISetting
+                name='bFull Screen'
+                workingINI={working}
+                savedINI={saved}
+            />
         );
-
         if (working.getSetting('bBorderless')) settingComponents.push(
-        <INISetting
-            name='bBorderless'
-            workingINI={working}
-            savedINI={saved}
-        />
+            <INISetting
+                name='bBorderless'
+                workingINI={working}
+                savedINI={saved}
+            />
         );
-
         if (working.getSetting('bFXAAEnabled')) settingComponents.push(
-        <INISetting
-            name='bFXAAEnabled'
-            workingINI={working}
-            savedINI={saved}
-        />
+            <INISetting
+                name='bFXAAEnabled'
+                workingINI={working}
+                savedINI={saved}
+            />
+        );
+        if (working.getSetting('bUseTAA')) settingComponents.push(
+            <INISetting
+                name='bUseTAA'
+                workingINI={working}
+                savedINI={saved}
+            />
         );
         if (working.getSetting('bAlwaysActive')) settingComponents.push(
             <INISetting
@@ -149,8 +155,7 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
                 workingINI={working}
                 savedINI={saved}
             />
-            );
-        
+        );
         const otherValues = working.iniValues.filter(v => v.displayTab === tabName && v.category === 'general')
         .map(set => (
         <INISetting 

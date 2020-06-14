@@ -79,10 +79,30 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                         id: 'btn-save-inis',
                         key: 'btn-save-inis',
                         icon: 'savegame',
-                        text: 'Save Changes',
+                        text: 'Save',
                         state: loading,
                         condition: () => loading ? t('Please wait for the page to finish loading.') : true,
                         onClick: () => undefined
+                    }
+                }
+            },
+            {
+                component: ToolbarIcon,
+                props: () => {
+                    const { loading } = this.state;
+                    const { t } = this.props;
+                    return {
+                        id: 'btn-reset-inis',
+                        key: 'btn-reset-inis',
+                        icon: 'undo',
+                        text: 'Reset',
+                        state: loading,
+                        condition: () => loading ? t('Please wait for the page to finish loading.') : true,
+                        onClick: () => {
+                            this.nextState.loading = true;
+                            this.start(); 
+                            this.forceUpdate();
+                        }
                     }
                 }
             }
