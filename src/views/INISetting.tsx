@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Row, Col } from 'react-bootstrap';
 import { INIEntry, INISettings } from '../types/INIDetails';
-import { ComponentEx, tooltip } from "vortex-api";
+import { util, ComponentEx, tooltip, Toggle } from "vortex-api";
 import Select from 'react-select';
 
 interface IProps {
@@ -47,7 +47,7 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         const value : string | number = (type === 'boolean') ? setting.value.current ? 1 : 0 : `${setting.value.current}`;
         switch(type) {
             case 'string': return <input className='form-control' value={value} onChange={this.set.bind(this)}/>
-            case 'boolean': return <input type='checkbox' checked={value == 1} onChange={this.set.bind(this)}/>
+            case 'boolean': return <Toggle checked={value == 1} onToggle={this.set.bind(this)} />
             case 'number': return <input value={value} readOnly/>
             case 'float': return <input value={value} readOnly/>
             case 'choice': return <Select options={setting.choices} value={setting.choices.find(c => c.value === setting.value.current)} onChange={this.set.bind(this)} isClearable={false}  /> 
@@ -66,9 +66,9 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         const { type, setting } = this.state;
 
         let newValue: number | string;
-        const current: any = setting.value.current;
+        const current: any = util.getSafe(setting, ['value', 'current'], undefined);
 
-        if (type === 'boolean') newValue = event.target.checked ? 1 : 0;
+        if (type === 'boolean') newValue = event ? 1 : 0;
         else if (type === 'choice') {
             if (!event || !!event.value) event = setting.choices.find(c => c.value === setting.value.default);
             newValue = !isNaN(parseFloat(current)) ? parseFloat(event.value) : Number.isInteger(current) ? parseInt(event.value) : event.value

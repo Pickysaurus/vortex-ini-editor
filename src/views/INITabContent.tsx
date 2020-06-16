@@ -59,7 +59,6 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
             <span className='ini-editor-tab-content'>
                 {tabName} Settings go here.
                 {this.renderVisibleSettings()}
-                
                 <PanelGroup id={`${tabName}-panel-group`}>
                     <Panel expanded={expandAdvanced} eventKey={`${tabName}-advanced`} onToggle={nop}>
                         <Panel.Heading onClick={this.toggleAdvanced}>
@@ -170,9 +169,9 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
 
         
         return (
-        <span>
+        <>
             {this.createRows(settingComponents)}
-        </span>
+        </>
         );
     }
 
