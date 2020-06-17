@@ -67,7 +67,7 @@ export class INISettings implements INIDetails {
         let existing = this.iniValues.find(v => v.name.toLowerCase() === name.toLowerCase());
         if (!!existing) { 
             if (existing.type === 'boolean' || existing.type === 'number') existing.value.current = parseInt(value);
-            else if (existing.type === 'float') existing.value.current = parseFloat(value);
+            else if (existing.type === 'float') existing.value.current = parseFloat(value).toFixed(8);
             else existing.value.current = value;
         }
         else console.warn('Failed to set non-existant INI setting', section, name, value);
@@ -139,8 +139,8 @@ export interface INIEntry {
     rangeStepSize?: number;
     // @displayTab: Which tab should we load this into for Vortex's UI? If this is unfilled it will be classed as an "undocumented" value under "Advanced"
     displayTab?: string;
-    // @category: For general the setting will be visible, for advanced it will appear under "advanced" in the displayTab, if not set, it will appear under "undocumented" in the displayTab. 
-    category?: 'general' | 'advanced';
+    // @visible: Show this value or hide it in "Advanced". 
+    visible?: boolean;
     // @allowPrefs: This setting works in the prefs INI
     allowPrefs?: boolean;
     // @dependantOn: This setting is dependent upon another setting. If the dependent setting is not set, this value does nothing.

@@ -1,15 +1,13 @@
 import * as React from 'react';
-import { Row, Col } from 'react-bootstrap';
+import { Row, Col, OverlayTrigger, Popover } from 'react-bootstrap';
 import { INIEntry, INISettings } from '../types/INIDetails';
-import { util, ComponentEx, tooltip, Toggle } from "vortex-api";
+import { util, ComponentEx, tooltip, Toggle, Icon } from "vortex-api";
 import Select from 'react-select';
 
 interface IProps {
     name: string;
     workingINI: INISettings;
     savedINI: INISettings;
-    get?: (name: string) => void;
-    set?: (section: string, name: string, value: string | boolean | number) => void;
 }
 
 interface IComponentState {
@@ -31,26 +29,38 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
     }
 
     render() {
-        const { savedSetting, setting, type } = this.state;
+        const { savedSetting, setting } = this.state;
         const displayName = setting.title || getFriendlyName(setting.name) || setting.name;
 
         return (
-            <span key={setting.name} title={setting.description || 'No description.'}>
-                <p><b>{displayName}</b>{setting.value.current != savedSetting.value.current ? <tooltip.Icon name="feedback-warning" tooltip='Data not saved!' /> : ''}</p>
+            <span key={setting.name}>
+                <p><b title={setting.description || 'No description.'}>{displayName}</b>{/*setting.value.current != savedSetting.value.current ? <tooltip.Icon name="feedback-warning" tooltip='Data not saved!' /> : ''*/}</p>
                 {this.renderInput()}
+                {this.renderIcons()}
             </span>
         )
     }
 
-    renderInput() {
+    UNSAFE_componentWillUpdate(nextProps) {
+        // This is a little cheat for the advanced tab where we re-render the same component with different values.
+        if (nextProps.name !== this.props.name) {
+            this.nextState.setting = this.props.workingINI.getSetting(nextProps.name);
+            this.nextState.savedSetting = this.props.savedINI.getSetting(nextProps.name);
+            this.nextState.type = this.props.workingINI.getSetting(nextProps.name).type;
+        }
+    }
+
+    renderInput(): JSX.Element {
         const { setting, type } = this.state;
-        const value : string | number = (type === 'boolean') ? setting.value.current ? 1 : 0 : `${setting.value.current}`;
+
+        let value : any = setting.value.current || '';
+
         switch(type) {
             case 'string': return <input className='form-control' value={value} onChange={this.set.bind(this)}/>
             case 'boolean': return <Toggle checked={value == 1} onToggle={this.set.bind(this)} />
-            case 'number': return <input value={value} readOnly/>
-            case 'float': return <input value={value} readOnly/>
-            case 'choice': return <Select options={setting.choices} value={setting.choices.find(c => c.value === setting.value.current)} onChange={this.set.bind(this)} isClearable={false}  /> 
+            case 'number': return <input className='form-control' value={value ? parseInt(value) : undefined} onChange={this.set.bind(this)}/>
+            case 'float': return <input  className='form-control' value={value ? parseFloat(value).toFixed(8): undefined} onChange={this.set.bind(this)}/>
+            case 'choice': return <Select options={setting.choices} value={setting.choices.find(c => c.value === setting.value.current)} onChange={this.set.bind(this)} clearable={false}  /> 
             case 'free-choice': return <select><option>{value}</option></select>
             case 'range': return (
             <Row>
@@ -71,9 +81,9 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         if (type === 'boolean') newValue = event ? 1 : 0;
         else if (type === 'choice') {
             if (!event || !!event.value) event = setting.choices.find(c => c.value === setting.value.default);
-            newValue = !isNaN(parseFloat(current)) ? parseFloat(event.value) : Number.isInteger(current) ? parseInt(event.value) : event.value
+            newValue = !isNaN(parseFloat(current)) ? parseFloat(event.value).toFixed(8) : Number.isInteger(current) ? parseInt(event.value) : event.value
         }
-        else if (type === 'range') newValue = !isNaN(parseFloat(current)) ? parseFloat(event.target.value) : Number.isInteger(current) ? parseInt(event.target.value) : event.target.value;
+        else if (type === 'range') newValue = !isNaN(parseFloat(current)) ? parseFloat(event.target.value).toFixed(8) : Number.isInteger(current) ? parseInt(event.target.value) : event.target.value;
         else newValue = event.target.value;
 
         if (current === newValue) return;
@@ -84,6 +94,34 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         this.nextState.setting.value.current = newValue;
 
     }
+
+    renderIcons(): JSX.Element {
+        const { savedSetting, setting } = this.state;
+        const valueChanged: boolean = setting.value.current != savedSetting.value.current;
+
+        return (
+            <>
+            <OverlayTrigger
+                trigger='click'
+                rootClose
+                placement='bottom'
+                overlay={
+                    <Popover>
+                        {formatDescriptionTooltip(setting)}
+                    </Popover>
+                }
+            >
+            <Icon name="about" />
+            </OverlayTrigger>
+            <tooltip.Icon name="feedback-warning" tooltip={valueChanged ? 'Edit not saved!' : 'Saved'} />
+            <tooltip.Icon name="refresh" tooltip={'Reset Value'} />
+            </>
+        ); 
+    }
+}
+
+function formatDescriptionTooltip(setting: INIEntry): string {
+    return `${setting.description || 'This setting has not been documented.'}\n\n[${setting.section}]\n${setting.name}\nValue Type: ${setting.type}`;
 }
 
 function getFriendlyName(setting: string): string {

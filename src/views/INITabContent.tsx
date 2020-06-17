@@ -1,13 +1,14 @@
 import * as React from 'react';
 import { Row, Col, Panel, PanelGroup } from 'react-bootstrap';
 import { ComponentEx, Icon } from 'vortex-api';
-import { INISettings } from '../types/INIDetails';
+import Select from 'react-select';
+import { INISettings, INIEntry } from '../types/INIDetails';
 import INISetting from './INISetting';
 import INIResolution from './INIResolution';
 
 // List of settings that are manually rendered in the visible area at the top of each tab. Others will be loaded into to the advanced/undocumented sections.
 const visibleSettings = {
-    General: ['iSize H', 'iSize W'],
+    General: ['iSize H', 'iSize W', 'bFull Screen', 'bBorderless', 'bUseTAA', 'bAlwaysActive'],
     Display: [],
     Gameplay: [],
     Interface: [],
@@ -17,7 +18,7 @@ const visibleSettings = {
 
 // For undocumented settings, place the settings in these categories on each tab.
 const sectionsToInclude = {
-    General: [],
+    General: ['General'],
     Display: [],
     Gameplay: [],
     Interface: [],
@@ -33,7 +34,8 @@ interface IProps {
 
 interface IComponentState {
     expandAdvanced: boolean;
-    expandUndocumented: boolean;
+    advancedFilter?: { label: string, value: any };
+    advancedActiveSetting?: { label: string, value: any, setting?: INIEntry };
 }
 
 function nop() {
@@ -46,14 +48,18 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
 
         this.initState({
             expandAdvanced: false,
-            expandUndocumented: false,
         });
 
     }
 
     render(): JSX.Element {
-        const { tabName } = this.props;
-        const { expandAdvanced, expandUndocumented } = this.state;
+        const { tabName, working, saved } = this.props;
+        const { expandAdvanced } = this.state;
+
+        const advanced = working.iniValues.filter(s => !s.visible && sectionsToInclude[tabName].includes(s.section))
+        .map(uS => <INISetting name={uS.name} workingINI={working} savedINI={saved} />);
+
+        if (tabName === 'Advanced') return this.renderAdvancedSettings();
 
         return (
             <span className='ini-editor-tab-content'>
@@ -65,15 +71,7 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
                             <Panel.Title><Icon name={expandAdvanced ? 'showhide-down' : 'showhide-right'} /> Advanced</Panel.Title>
                         </Panel.Heading>
                         <Panel.Body collapsible>
-                            {expandAdvanced ? 'Advanced Settings.' : null}
-                        </Panel.Body>
-                    </Panel>
-                    <Panel expanded={expandUndocumented} eventKey={`${tabName}-undocumented`} onToggle={nop}>
-                        <Panel.Heading onClick={this.toggleUnDocumented}>
-                            <Panel.Title><Icon name={expandUndocumented ? 'showhide-down' : 'showhide-right'} /> Undocumented</Panel.Title>
-                        </Panel.Heading>
-                        <Panel.Body collapsible>
-                            {expandUndocumented ? 'Undocumented Settings.' : null}
+                            {this.createRows(advanced)}
                         </Panel.Body>
                     </Panel>
                 </PanelGroup>
@@ -83,10 +81,6 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
 
     private toggleAdvanced = () => {
         this.nextState.expandAdvanced = !this.state.expandAdvanced;
-    }
-
-    private toggleUnDocumented = () => {
-        this.nextState.expandUndocumented = !this.state.expandUndocumented;
     }
 
     renderVisibleSettings(): JSX.Element {
@@ -107,66 +101,29 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
 
         let settingComponents: JSX.Element[] = [];
 
-        const widthSetting = working.getSetting('iSize W');
-        const heightSetting = working.getSetting('iSize H');
-        // if (widthSetting && heightSetting) settingComponents.push(<p>Resolution: {widthSetting.value.current} x {heightSetting.value.current}</p>);
-
         if (working.getSetting('iSize W') && working.getSetting('iSize H')) settingComponents.push(
-            <INIResolution
-                nameW='iSize W'    
-                nameH='iSize H'
-                workingINI={working}
-                savedINI={saved}
-            />
-        )
+            <INIResolution nameW='iSize W' nameH='iSize H' workingINI={working} savedINI={saved}/>
+        );
 
         if (working.getSetting('bFull Screen')) settingComponents.push(
-            <INISetting
-                name='bFull Screen'
-                workingINI={working}
-                savedINI={saved}
-            />
+            <INISetting name='bFull Screen' workingINI={working} savedINI={saved} />
         );
         if (working.getSetting('bBorderless')) settingComponents.push(
-            <INISetting
-                name='bBorderless'
-                workingINI={working}
-                savedINI={saved}
-            />
+            <INISetting name='bBorderless' workingINI={working} savedINI={saved} />
         );
         if (working.getSetting('bFXAAEnabled')) settingComponents.push(
-            <INISetting
-                name='bFXAAEnabled'
-                workingINI={working}
-                savedINI={saved}
-            />
+            <INISetting name='bFXAAEnabled' workingINI={working} savedINI={saved} />
         );
         if (working.getSetting('bUseTAA')) settingComponents.push(
-            <INISetting
-                name='bUseTAA'
-                workingINI={working}
-                savedINI={saved}
-            />
+            <INISetting name='bUseTAA' workingINI={working} savedINI={saved} />
         );
         if (working.getSetting('bAlwaysActive')) settingComponents.push(
-            <INISetting
-                name='bAlwaysActive'
-                workingINI={working}
-                savedINI={saved}
-            />
+            <INISetting name='bAlwaysActive' workingINI={working} savedINI={saved} />
         );
-        const otherValues = working.iniValues.filter(v => v.displayTab === tabName && v.category === 'general')
-        .map(set => (
-        <INISetting 
-            name={set.name}
-            workingINI={working}
-            savedINI={saved}
-        />
-        ));
+        const otherValues = working.iniValues.filter(v => v.displayTab === tabName && v.visible && !visibleSettings[tabName].includes(v.name))
+        .map(set => (<INISetting name={set.name} workingINI={working} savedINI={saved} />));
 
         settingComponents = settingComponents.concat(otherValues);
-
-
         
         return (
         <>
@@ -200,13 +157,47 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
     }
 
     renderAdvancedSettings(): JSX.Element {
-        const { tabName } = this.props;
+        const { tabName, working, saved } = this.props;
+        const { advancedFilter, advancedActiveSetting } = this.state;
+
+        const sections = [];
+
+        const options = working.iniValues.map((v: INIEntry) => {
+            if (!sections.find(s => s.value === v.section)) sections.push({ label: `[${v.section}]`, value: v.section });
+
+            return {
+                label: v.name,
+                value: v.name,
+                setting: v
+            }
+        }).filter((o) => advancedFilter ? o.setting.section === advancedFilter.value : o);
         
-        return (<p>Render {tabName}</p>);
+        return (
+        <span className='ini-editor-tab-content'>
+            <p>{tabName} settings</p>
+            Category
+            <Select
+                options={sections}
+                value={advancedFilter}
+                onChange={(newValue: { label: string, value: any }) => {
+                    this.nextState.advancedFilter = newValue;
+                    this.nextState.advancedActiveSetting = null;
+                }}
+            />
+            Setting
+            <Select
+                options={options}
+                value={advancedActiveSetting}
+                onChange={(newValue: { label: string, value: any }) => this.nextState.advancedActiveSetting = newValue}
+            />
+            {advancedActiveSetting ? <div className="ini-setting-container">
+                <INISetting name={working.getSetting(advancedActiveSetting.label).name} workingINI={working} savedINI={saved} /> 
+            </div>: ''}
+        </span>
+        );
     }
 
-    createRows(settings: JSX.Element[]): JSX.Element {
-        const rowCount = 4;
+    createRows(settings: JSX.Element[], rowCount: 4 | 3 = 4): JSX.Element {
         let index = 0;
         let result = [];
         for (index = 0; index < settings.length; index += rowCount) {
@@ -216,7 +207,7 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
                 <Col className={rowValues[0] ? `ini-setting-container`: ''} xs={12}>{rowValues[0]}</Col>
                 <Col className={rowValues[1] ? `ini-setting-container`: ''} xs={12}>{rowValues[1]}</Col>
                 <Col className={rowValues[2] ? `ini-setting-container`: ''} xs={12}>{rowValues[2]}</Col>
-                <Col className={rowValues[3] ? `ini-setting-container`: ''} xs={12}>{rowValues[3]}</Col>
+                {rowCount === 4 ? <Col className={rowValues[3] ? `ini-setting-container`: ''} xs={12}>{rowValues[3]}</Col>: ''}
             </Row>
             );
         }

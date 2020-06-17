@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { INIEntry, INISettings } from '../types/INIDetails';
 import { ComponentEx, tooltip } from "vortex-api";
-import Creatable from 'react-select';
+import { Creatable } from 'react-select';
 
 interface IProps {
     nameW: string;
@@ -43,54 +43,42 @@ class INIResolution extends ComponentEx<IProps, IComponentState> {
 
     }
 
-    handleChange = (newValue: any, actionMeta: any) => {
+    handleChange = (newValue: {label: string, value: any, h: number, w: number}, actionMeta?: any) => {
         if (!newValue) return;
         const { workingINI, nameW, nameH } = this.props;
         workingINI.updateSetting('Display', nameW, newValue.w);
         this.nextState.w.value.current = newValue.w;
         workingINI.updateSetting('Display', nameH, newValue.h);
         this.nextState.h.value.current = newValue.h;
-        this.nextState.current = newValue.value;
+        this.nextState.current = newValue.label;
 
     }
 
-    handleCreate = (inputValue: any) => {
-        const { options } = this.state;
-        const newOption = this.validateNewOption(inputValue);
-        if (!newOption) return console.warn('Invalid resolution input', inputValue);
-        this.nextState.options = [newOption, ...options];
-        this.nextState.current = newOption.value;
-        this.nextState.w.value.current = newOption.w;
-        this.nextState.h.value.current = newOption.h;
-    }
-
-    validateNewOption = (opt: any) => {
-        try {
-            const sizes = opt.value.split('x');
-            if (sizes.legth !== 2) return;
-            const w = parseInt(sizes[0].trim());
-            const h = parseInt(sizes[1].trim());
-            if (w == NaN || h === NaN) return;
-            const label = `${w} x ${h}`;
-            return { label, value: label, w, h };
-        }
-        catch(err) {
-            return;
+    createOption = (arg: { label: string, labelKey: string, valueKey: string }): {label: string, value: string, w?: number, h?: number} => {
+        const [w, h] = arg.label.split('x').map(n => parseInt(n.trim()));
+        return {
+            label: `${w} x ${h}`,
+            value: arg.valueKey,
+            w,
+            h,
         }
     }
 
     render(): JSX.Element {
         const { current, options } = this.state;
+        const currentOpt = options.find(o => o.label === current);
 
         return (
             <span key='resolution' title='Changes the resolution. You can manually type a custom resolution.'>
                 <p><b>Resolution</b></p>
                 <Creatable 
                     options={options}
-                    value={current}
+                    value={currentOpt}
                     onChange={this.handleChange}
-                    onCreateOption={this.handleCreate}
                     promptTextCreator={this.createPrompt}
+                    clearable={false}
+                    isValidNewOption={(arg: {label: string}) => arg.label && !!arg.label.match(/[0-9]{3,}( x |x)[0-9]{3,}/)}
+                    newOptionCreator={this.createOption}
                 />
             </span>
         );
@@ -98,7 +86,7 @@ class INIResolution extends ComponentEx<IProps, IComponentState> {
     }
 
     private createPrompt = (label: string): string => {
-        return `Add Resolution: ${label}`;
+        return `Add: ${label}`;
     }
 }
 

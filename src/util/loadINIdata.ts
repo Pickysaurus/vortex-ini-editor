@@ -29,7 +29,7 @@ function loadINIData(loadMsg: (message: string) => void, gameId: string) : Promi
                 let currentValue = data[section][name];
                 const type = getTypeFromName(name);
                 if (type === 'boolean' || type === 'number') currentValue = parseInt(currentValue);
-                else if (type === 'float') currentValue = parseFloat(currentValue);
+                else if (type === 'float') currentValue = parseFloat(currentValue).toFixed(8);
                 iniSettings.updateSetting(section, name, currentValue);
               }))
             }));

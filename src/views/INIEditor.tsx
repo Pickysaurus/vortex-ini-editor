@@ -94,7 +94,7 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                     return {
                         id: 'btn-reset-inis',
                         key: 'btn-reset-inis',
-                        icon: 'undo',
+                        icon: 'refresh',
                         text: 'Reset',
                         state: loading,
                         condition: () => loading ? t('Please wait for the page to finish loading.') : true,
@@ -137,7 +137,7 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
             this.nextState.workingData = new INISettings(JSON.parse(JSON.stringify(iniData)));
             this.nextState.loading = false;
             this.nextState.loadingMessage = null;
-            console.log(iniData);
+            // console.log(iniData);
             return Promise.resolve();
         })
     }
