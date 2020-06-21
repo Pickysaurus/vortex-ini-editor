@@ -30,7 +30,7 @@ function loadINIData(loadMsg: (message: string) => void, gameId: string) : Promi
                 const type = getTypeFromName(name);
                 if (type === 'boolean' || type === 'number') currentValue = parseInt(currentValue);
                 else if (type === 'float') currentValue = parseFloat(currentValue).toFixed(8);
-                iniSettings.updateSetting(section, name, currentValue);
+                iniSettings.updateSetting(name, currentValue, section);
               }))
             }));
           });
@@ -38,7 +38,10 @@ function loadINIData(loadMsg: (message: string) => void, gameId: string) : Promi
       }).then(() => iniSettings);
 
     })
-    .catch((err) => loadMsg(`Error!\n ${err.code} - ${err.message}`)); 
+    .catch((err) => {
+      loadMsg(`An error occured getting INI data.\n ${err.message}`);
+      throw err;
+    }); 
 }
 
 function getTypeFromName(name: string) {

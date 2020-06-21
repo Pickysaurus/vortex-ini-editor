@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Row, Col, OverlayTrigger, Popover } from 'react-bootstrap';
+import { Row, Col, OverlayTrigger, Popover, Button, ButtonGroup } from 'react-bootstrap';
 import { INIEntry, INISettings } from '../types/INIDetails';
 import { util, ComponentEx, tooltip, Toggle, Icon } from "vortex-api";
 import Select from 'react-select';
@@ -26,18 +26,21 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
             savedSetting: props.savedINI.getSetting(props.name),
             type: props.workingINI.getSetting(props.name).type,
         });
+
+        this.set = this.set.bind(this);
     }
 
     render() {
-        const { savedSetting, setting } = this.state;
+        const { setting } = this.state;
         const displayName = setting.title || getFriendlyName(setting.name) || setting.name;
+        // span key={setting.name}
 
         return (
-            <span key={setting.name}>
+            <>
                 <p><b title={setting.description || 'No description.'}>{displayName}</b>{/*setting.value.current != savedSetting.value.current ? <tooltip.Icon name="feedback-warning" tooltip='Data not saved!' /> : ''*/}</p>
                 {this.renderInput()}
                 {this.renderIcons()}
-            </span>
+            </>
         )
     }
 
@@ -56,42 +59,46 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         let value : any = setting.value.current || '';
 
         switch(type) {
-            case 'string': return <input className='form-control' value={value} onChange={this.set.bind(this)}/>
-            case 'boolean': return <Toggle checked={value == 1} onToggle={this.set.bind(this)} />
-            case 'number': return <input className='form-control' value={value ? parseInt(value) : undefined} onChange={this.set.bind(this)}/>
-            case 'float': return <input  className='form-control' value={value ? parseFloat(value).toFixed(8): undefined} onChange={this.set.bind(this)}/>
-            case 'choice': return <Select options={setting.choices} value={setting.choices.find(c => c.value === setting.value.current)} onChange={this.set.bind(this)} clearable={false}  /> 
+            case 'string': return <input className='form-control' value={value} onChange={(event) => this.set(event.target.value)}/>
+            case 'boolean': return <Toggle checked={value == 1} onToggle={(checked) => this.set(checked)} />
+            case 'number': return <input className='form-control' value={value ? parseInt(value) : undefined} onChange={(event) => this.set(event.target.value)}/>
+            case 'float': return <input  className='form-control' value={value ? parseFloat(value).toFixed(8): undefined} onChange={(event) => this.set(event.target.value)}/>
+            case 'choice': return <Select options={setting.choices} value={setting.choices.find(c => c.value === value)} onChange={(event) => this.set(event)} clearable={false}  /> 
             case 'free-choice': return <select><option>{value}</option></select>
             case 'range': return (
-            <Row>
-                <Col sm='auto'><input type='range' value={setting.value.current || 0} min={setting.value.min} max={setting.value.max} step={setting.rangeStepSize} onChange={this.set.bind(this)} /></Col>
-                <Col sm={6}><input className='form-control' value={setting.value.current}/></Col>
-            </Row>);
+            <span className='ini-settings-range'>
+                <input type='range' value={value || 0} min={setting.value.min} max={setting.value.max} step={setting.rangeStepSize} onChange={(event) => this.set(event.target.value)} />
+                <input className='form-control' value={value}/>
+            </span>);
             default: return <input className='form-control' value={value} readOnly/>
         }
     }
 
-    set(event) {
+    set(newVal: any) {
         const { workingINI } = this.props;
         const { type, setting } = this.state;
-
-        let newValue: number | string;
         const current: any = util.getSafe(setting, ['value', 'current'], undefined);
 
-        if (type === 'boolean') newValue = event ? 1 : 0;
-        else if (type === 'choice') {
-            if (!event || !!event.value) event = setting.choices.find(c => c.value === setting.value.default);
-            newValue = !isNaN(parseFloat(current)) ? parseFloat(event.value).toFixed(8) : Number.isInteger(current) ? parseInt(event.value) : event.value
+        let newValue: number | string;
+
+        if (type === 'boolean') newValue = newVal === true ? 1 : 0;
+        else if (type === 'number') newValue = parseInt(newVal);
+        else if (type === 'float') newValue = parseFloat(newVal).toFixed(8);
+        else if (type === 'choice' || type === 'free-choice') {
+            if (!newVal) newVal = setting.choices.find(c => c.value === setting.value.default).value;
+            // Work out if this is a float, number or string.
+            newValue = !isNaN(parseFloat(current)) && current.toString().includes('.') ? parseFloat(newVal.value).toFixed(8) : Number.isInteger(current) ? parseInt(newVal.value) : newVal.value;
         }
-        else if (type === 'range') newValue = !isNaN(parseFloat(current)) ? parseFloat(event.target.value).toFixed(8) : Number.isInteger(current) ? parseInt(event.target.value) : event.target.value;
-        else newValue = event.target.value;
+        else if (type === 'range') newValue = !isNaN(parseFloat(current)) && current.toString().includes('.') ? parseFloat(newVal).toFixed(8) : Number.isInteger(current) ? parseInt(newVal) : newVal;
+        else newValue = newVal;
 
         if (current === newValue) return;
 
         //do validation and apply new value.
 
-        workingINI.updateSetting(setting.section, setting.name, newValue);
-        this.nextState.setting.value.current = newValue;
+        workingINI.updateSetting(setting.name, newValue, setting.section);
+        if (newValue !== null) this.nextState.setting.value.current = newValue;
+        else delete this.nextState.setting.value.current;
 
     }
 
@@ -99,29 +106,35 @@ class INISetting extends ComponentEx<IProps, IComponentState> {
         const { savedSetting, setting } = this.state;
         const valueChanged: boolean = setting.value.current != savedSetting.value.current;
 
+        const resetValue = util.getSafe(savedSetting, ['value', 'current'], null);
+        const recommended = util.getSafe(savedSetting, ['value', 'recommended'], null);
+
+        const InfoOverlay = (
+        <Popover id={`${setting.name}-info`} title='Info'>
+            <p>{setting.description || 'This setting has not been documented.'}</p>
+            <p><b>[{setting.section}]</b><br />
+            {setting.name}</p>
+            <p><b>Value Type:</b> {setting.type}</p>
+        </Popover>
+        );
+
         return (
-            <>
-            <OverlayTrigger
-                trigger='click'
-                rootClose
-                placement='bottom'
-                overlay={
-                    <Popover>
-                        {formatDescriptionTooltip(setting)}
-                    </Popover>
-                }
-            >
-            <Icon name="about" />
+            <div className="ini-settings-icons">
+            <ButtonGroup>
+            <OverlayTrigger trigger='click' rootClose placement='bottom' overlay={InfoOverlay}>
+                <Button><Icon name="about" /></Button>
             </OverlayTrigger>
-            <tooltip.Icon name="feedback-warning" tooltip={valueChanged ? 'Edit not saved!' : 'Saved'} />
-            <tooltip.Icon name="refresh" tooltip={'Reset Value'} />
-            </>
+            <Button title={'Reset Value'} disabled={!valueChanged} onClick={() => this.set(resetValue)}><Icon name='refresh'/></Button>
+            {recommended !== null ? 
+            <Button title={'Use Recommended'} disabled={setting.value.current == recommended} onClick={() => this.set(recommended)}><Icon name='smart'/></Button> 
+            : ''}
+            </ButtonGroup>
+            <ButtonGroup style={{color: 'var(--brand-warning)'}}>
+            {valueChanged ? <tooltip.Icon className='ini-settings-warning' tooltip={'Edit not saved!'} name='feedback-warning' />: ''}
+            </ButtonGroup>
+            </div>
         ); 
     }
-}
-
-function formatDescriptionTooltip(setting: INIEntry): string {
-    return `${setting.description || 'This setting has not been documented.'}\n\n[${setting.section}]\n${setting.name}\nValue Type: ${setting.type}`;
 }
 
 function getFriendlyName(setting: string): string {

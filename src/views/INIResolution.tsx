@@ -1,6 +1,7 @@
 import * as React from 'react';
+import { OverlayTrigger, Popover, Button, ButtonGroup } from 'react-bootstrap';
 import { INIEntry, INISettings } from '../types/INIDetails';
-import { ComponentEx, tooltip } from "vortex-api";
+import { ComponentEx, tooltip, Icon } from "vortex-api";
 import { Creatable } from 'react-select';
 
 interface IProps {
@@ -32,7 +33,7 @@ class INIResolution extends ComponentEx<IProps, IComponentState> {
             h,
             current,
             savedW: props.savedINI.getSetting(props.nameW),
-            savedH: props.savedINI.getSetting(props.nameW),
+            savedH: props.savedINI.getSetting(props.nameH),
             options: [
                 {w: w.value.current, h: h.value.current, label: current, value: current},
                 ...w.choices.map((wd: {label: string, value: number}, i: number) => {
@@ -46,9 +47,9 @@ class INIResolution extends ComponentEx<IProps, IComponentState> {
     handleChange = (newValue: {label: string, value: any, h: number, w: number}, actionMeta?: any) => {
         if (!newValue) return;
         const { workingINI, nameW, nameH } = this.props;
-        workingINI.updateSetting('Display', nameW, newValue.w);
+        workingINI.updateSetting(nameW, newValue.w);
         this.nextState.w.value.current = newValue.w;
-        workingINI.updateSetting('Display', nameH, newValue.h);
+        workingINI.updateSetting(nameH, newValue.h);
         this.nextState.h.value.current = newValue.h;
         this.nextState.current = newValue.label;
 
@@ -69,7 +70,7 @@ class INIResolution extends ComponentEx<IProps, IComponentState> {
         const currentOpt = options.find(o => o.label === current);
 
         return (
-            <span key='resolution' title='Changes the resolution. You can manually type a custom resolution.'>
+            <>
                 <p><b>Resolution</b></p>
                 <Creatable 
                     options={options}
@@ -80,13 +81,51 @@ class INIResolution extends ComponentEx<IProps, IComponentState> {
                     isValidNewOption={(arg: {label: string}) => arg.label && !!arg.label.match(/[0-9]{3,}( x |x)[0-9]{3,}/)}
                     newOptionCreator={this.createOption}
                 />
-            </span>
+                {this.renderIcons()}
+            </>
         );
 
     }
 
     private createPrompt = (label: string): string => {
         return `Add: ${label}`;
+    }
+
+    renderIcons(): JSX.Element {
+        const { savedH, savedW, w, h } = this.state;
+        const { workingINI, nameW, nameH } = this.props;
+        const valueChanged: boolean = (w.value.current !== savedW.value.current || h.value.current !== savedH.value.current);
+
+        const InfoOverlay = (
+        <Popover id={'resolution-info'} title='Info'>
+            <p>Change the game resolution. You can manually try a custom resolution</p>
+            <p><b>[Display]</b><br />
+            {nameW}, {nameH}</p>
+            <p><b>Value Type:</b> Custom</p>
+        </Popover>
+        );
+
+        const resetValues = () => {
+            workingINI.updateSetting(nameW, savedW.value.current);
+            this.nextState.w.value.current = savedW.value.current;
+            workingINI.updateSetting(nameH, savedH.value.current);
+            this.nextState.h.value.current = savedH.value.current;
+            this.nextState.current = `${savedW.value.current} x ${savedH.value.current}`;
+        }
+
+        return (
+            <div className="ini-settings-icons">
+            <ButtonGroup>
+            <OverlayTrigger trigger='click' rootClose placement='bottom' overlay={InfoOverlay}>
+                <Button><Icon name="about" /></Button>
+            </OverlayTrigger>
+            <Button title={'Reset Value'} disabled={!valueChanged} onClick={() => resetValues()}><Icon name='refresh'/></Button>
+            </ButtonGroup>
+            <ButtonGroup style={{color: 'var(--brand-warning)'}}>
+            {valueChanged ? <tooltip.Icon className='ini-settings-warning' tooltip={'Edit not saved!'} name='feedback-warning' />: ''}
+            </ButtonGroup>
+            </div>
+        ); 
     }
 }
 

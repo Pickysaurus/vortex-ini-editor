@@ -50,7 +50,7 @@ export class INISettings implements INIDetails {
         if (preferCustom && !custom) preferCustom = false;
         return Promise.all(settings.map((s: INIEntry) => {
             // Exit if it's not a value we need to print.
-            if ((!s.value || s.value === '') && s.hideIfBlank) return;
+            if ((!s.value || s.value === '') && !s.includeIfBlank) return;
             // Work out which INI to place it in.
             const destination = s.allowPrefs && prefs ? prefs : preferCustom ? custom : base;
             // Apply the value, creating the category if it's not already there.
@@ -63,9 +63,10 @@ export class INISettings implements INIDetails {
         
     }
 
-    updateSetting(section: string, name: string, value) {
+    updateSetting(name: string, value, section?: string) {
         let existing = this.iniValues.find(v => v.name.toLowerCase() === name.toLowerCase());
         if (!!existing) { 
+            if (value === null) delete existing.value.current;
             if (existing.type === 'boolean' || existing.type === 'number') existing.value.current = parseInt(value);
             else if (existing.type === 'float') existing.value.current = parseFloat(value).toFixed(8);
             else existing.value.current = value;
@@ -150,8 +151,8 @@ export interface INIEntry {
         // @value: the value required of the dependent setting for the main setting to work
         value: string | number;
     };
-    // @hideIfBlank: Should this value not be printed to the resulting INI file if it's blank?
-    hideIfBlank?: boolean;
+    // @includeIfBlank: Should this value be printed to the resulting INI file if it's blank?
+    includeIfBlank?: boolean;
 }
 
 /* INIEntry Example */

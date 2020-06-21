@@ -31,3 +31,43 @@
         margin-top: 0;
     }
 }
+
+.ini-settings-icons {
+    display: flex;
+    justify-content: space-between;
+
+    button, button:hover, button:disabled:hover, button:active {
+        background: none;
+        border: none;
+    }
+
+    button:hover:not(:disabled) {
+        color: var(--brand-clickable);
+    }
+
+    .btn-group {
+        padding-top: 8px;
+    }
+
+    .btn-group>.btn:first-child {
+        padding-left: 0;
+    }
+
+    .ini-settings-warning {
+        padding: .2em 0em .2em .5em;   
+        vertical-align: middle;
+    }
+}
+
+.ini-settings-range {
+    display: flex;
+    justify-content: space-evenly;
+
+    input[type="range"] {
+        width: 60%;
+    }
+
+    input {
+        width: 30%;
+    }
+}

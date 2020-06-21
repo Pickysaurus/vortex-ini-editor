@@ -1,4 +1,4 @@
-import { ComponentEx, fs, selectors, types, util, Spinner, MainPage, IconBar, ToolbarIcon } from 'vortex-api';
+import { ComponentEx, selectors, types, util, Spinner, MainPage, IconBar, ToolbarIcon, log, Icon } from 'vortex-api';
 import { Panel, Tab, Tabs } from 'react-bootstrap';
 import * as React from 'react';
 import * as Redux from 'redux';;
@@ -34,6 +34,7 @@ interface IComponentState {
     loadedData?: INISettings;
     workingData?: INISettings;
     activeTab: INITab;
+    error?: boolean;
 }
   
 type IProps = IBaseProps & IConnectedProps;
@@ -54,7 +55,7 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
             {
                 component: ToolbarIcon,
                 props: () => {
-                    const { loading } = this.state;
+                    const { loading, error } = this.state;
                     const { t } = this.props;
                     return {
                         id: 'btn-back-to-mods',
@@ -62,7 +63,7 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                         icon: 'nav-back',
                         text: 'Back to Mods',
                         state: loading,
-                        condition: () => loading ? t('Please wait for the page to finish loading.') : true,
+                        condition: () => loading && !error ? t('Please wait for the page to finish loading.') : true,
                         onClick: () => {
                             if (loading) return;
                             this.context.api.events.emit('show-main-page', 'Mods');
@@ -140,6 +141,14 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
             // console.log(iniData);
             return Promise.resolve();
         })
+        .catch((err) => {
+            log('error', 'Error getting INI data', err);
+            this.nextState.error = true;
+            setTimeout(() => {
+                this.context.api.events.emit('show-main-page', 'Mods');
+                this.nextState.error = undefined;
+            }, 5000);
+        });
     }
 
     render() : JSX.Element {
@@ -171,13 +180,13 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
     }
 
     private renderSpinner(): JSX.Element {
-        const { loadingMessage } = this.state;
+        const { loadingMessage, error } = this.state;
         return (
         <MainPage.Body id='ini-editor-loading'>
             <Panel>
                 <Panel.Body>
                     <div className="page-wait-spinner-container">
-                    <Spinner className='page-wait-spinner' />
+                    {!error ? <Spinner className='page-wait-spinner' /> : <Icon name='feedback-error' />}
                     </div>
                     {loadingMessage}
                 </Panel.Body>
