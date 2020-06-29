@@ -144,10 +144,6 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
         .catch((err) => {
             log('error', 'Error getting INI data', err);
             this.nextState.error = true;
-            setTimeout(() => {
-                this.context.api.events.emit('show-main-page', 'Mods');
-                this.nextState.error = undefined;
-            }, 5000);
         });
     }
 

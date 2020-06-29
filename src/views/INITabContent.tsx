@@ -16,16 +16,6 @@ const visibleSettings = {
     Advanced: [],
 }
 
-// For undocumented settings, place the settings in these categories on each tab.
-const sectionsToInclude = {
-    General: ['General'],
-    Display: [],
-    Gameplay: [],
-    Interface: [],
-    Visuals: [],
-    Advanced: [],
-}
-
 interface IProps {
     tabName: string;
     working: INISettings;
@@ -56,7 +46,7 @@ class INITabContent extends ComponentEx<IProps, IComponentState> {
         const { tabName, working, saved } = this.props;
         const { expandAdvanced } = this.state;
 
-        const advanced = working.iniValues.filter(s => !s.visible && sectionsToInclude[tabName].includes(s.section))
+        const advanced = working.iniValues.filter(s => !s.visible && s.displayTab === tabName)
         .map(uS => <INISetting name={uS.name} workingINI={working} savedINI={saved} />);
 
         if (tabName === 'Advanced') return this.renderAdvancedSettings();
