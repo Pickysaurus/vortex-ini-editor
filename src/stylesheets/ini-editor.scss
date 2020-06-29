@@ -32,6 +32,18 @@
     }
 }
 
+.ini-preset-buttons {
+    padding: 1.5em 0;
+    font-size: 1.1em;
+    .btn-group {
+        margin: 0 8px;
+    }
+
+    button {
+        margin: 0 4px;
+    }
+}
+
 .ini-settings-icons {
     display: flex;
     justify-content: space-between;

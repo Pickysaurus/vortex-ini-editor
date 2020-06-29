@@ -1,7 +1,8 @@
 import { ComponentEx, selectors, types, util, Spinner, MainPage, IconBar, ToolbarIcon, log, Icon } from 'vortex-api';
-import { Panel, Tab, Tabs } from 'react-bootstrap';
+import { Panel, Tab, Tabs, Button, ButtonGroup } from 'react-bootstrap';
 import * as React from 'react';
-import * as Redux from 'redux';;
+import * as Redux from 'redux';
+import * as path from 'path';
 import { withTranslation } from 'react-i18next';
 import { connect } from 'react-redux';
 import { TFunction } from 'i18next';
@@ -200,7 +201,8 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                 <Panel>
                     <Panel.Body>
                     <h1>Game Settings for {game.name}</h1>
-                    Some fluff goes here about the purpose of the extension and how to use it. 
+                    Some fluff goes here about the purpose of the extension and how to use it.
+                    {this.renderPresetButtons()}
                     <Tabs id="ini-tabs" activeKey={activeTab} onSelect={(tab: INITab) => this.nextState.activeTab = tab}>
                         {INIEditor.INITabs.map((tab: INITab) => {
                             return (
@@ -214,6 +216,38 @@ class INIEditor extends ComponentEx<IProps, IComponentState> {
                 </Panel>
             </MainPage.Body>
         );
+    }
+
+    private renderPresetButtons(): JSX.Element {
+        const { workingData } = this.state;
+
+        const presets = workingData.getPresetPaths('');
+        const buttons = presets.map(p => {
+            const pName = path.basename(p, '.ini');
+            const formatName = pName.charAt(0).toUpperCase() + pName.slice(1);
+            return (<Button title={`Use ${formatName} preset values.`} onClick={() =>this.setAllTo(pName)}>{formatName}</Button>);
+        })
+        
+        return (<div className='ini-preset-buttons'>
+            Presets: 
+            <ButtonGroup>
+                <Button title='Use defaults' onClick={() => this.setAllTo('default')}>Default</Button>
+                {buttons}
+            </ButtonGroup>
+        </div>);
+    }
+
+    private setAllTo(preset : string) {
+        const { workingData } = this.state;
+        const iniValues = workingData.iniValues;
+        console.groupCollapsed('Setting INI preset', preset);
+        iniValues.forEach((setting) => {
+            if (!setting.value[preset]) return;
+            console.log(`Updating ${setting.name} to value`, setting.value[preset]);
+            workingData.updateSetting(setting.name, setting.value[preset], setting.section);
+        });
+        console.groupEnd();
+        this.forceUpdate();
     }
 
     private renderTabContent(tabName: INITab): JSX.Element {
